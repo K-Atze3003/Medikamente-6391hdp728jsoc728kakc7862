@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MediTracker 🚑</title>
+    <title>MediTracker Pro 🚑</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -13,6 +13,7 @@
             --text: #1c1c1e;
             --danger: #ff3b30;
             --success: #34c759;
+            --warning: #ffcc00;
             --gray: #8e8e93;
         }
 
@@ -22,7 +23,7 @@
             color: var(--text);
             margin: 0;
             padding: 0;
-            padding-bottom: 80px;
+            padding-bottom: 100px;
             -webkit-user-select: none;
             user-select: none;
         }
@@ -87,41 +88,81 @@
             text-transform: uppercase;
         }
 
-        /* MED BUTTONS */
+        /* ZEITPUNKT WAHL (Manuelles Nachtragen) */
+        .time-selector {
+            background: #fff8dc;
+            border: 1px solid #ffeeba;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        .date-input {
+            border: 1px solid #ccc;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 16px;
+            display: none; /* Erst versteckt */
+        }
+        .date-input.show { display: block; }
+
+        /* MED BUTTONS MIT BALKEN */
         .med-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 10px;
+            gap: 12px;
         }
 
         .med-btn {
-            background: #eef5ff;
-            color: var(--primary);
-            border: 1px solid #dbeafe;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 0; /* Padding entfernt für Layout */
+            border-radius: 10px;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            height: 60px;
             text-align: left;
+        }
+        
+        .med-btn:active { transform: scale(0.98); }
+
+        /* Der Hintergrund-Balken */
+        .progress-bg {
+            position: absolute;
+            bottom: 0; left: 0;
+            height: 100%;
+            background: #e3f2fd; /* Helles Blau */
+            width: 0%;
+            transition: width 0.5s ease;
+            z-index: 1;
+        }
+        .progress-bg.limit-reached { background: #ffebee; } /* Helles Rot */
+
+        /* Der Text über dem Balken */
+        .med-content {
+            position: relative;
+            z-index: 2;
+            padding: 0 15px;
+            height: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
-        .med-btn:active { background: #dbeafe; transform: scale(0.98); }
-        .med-btn i { color: var(--primary); opacity: 0.7; }
+        .med-name { font-weight: 600; font-size: 16px; color: var(--text); }
+        .med-count { font-size: 13px; color: var(--gray); background: rgba(255,255,255,0.8); padding: 4px 8px; border-radius: 6px; }
+        .med-count.alert { color: var(--danger); font-weight: bold; }
 
-        .edit-input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
-
-        /* VITALS INPUTS */
+        /* EDIT MODE STYLES */
+        .edit-row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
+        .edit-input { flex: 2; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        .edit-max { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center;}
+        
+        /* CHECKBOX & INPUTS */
         .input-row {
             display: flex;
             align-items: center;
@@ -131,121 +172,67 @@
             border-bottom: 1px solid #f0f0f0;
         }
         .input-row:last-child { border-bottom: none; }
+        .num-input { width: 80px; padding: 8px; font-size: 18px; border: 1px solid #ddd; border-radius: 8px; text-align: center; }
 
-        .num-input {
-            width: 80px;
-            padding: 8px;
-            font-size: 18px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        /* CHECKBOX TOGGLE */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 28px;
-        }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px; width: 20px;
-            left: 4px; bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--danger); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        .save-vitals-btn {
-            width: 100%;
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 10px;
-            cursor: pointer;
-        }
+        .save-vitals-btn { width: 100%; background: var(--success); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: bold; margin-top: 10px; cursor: pointer; }
 
         /* HISTORY */
         .history-list { list-style: none; padding: 0; margin: 0; }
-        .history-item {
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
+        .history-item { padding: 12px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; }
         .hist-time { font-size: 12px; color: var(--gray); display: block; margin-bottom: 2px;}
         .hist-content { flex-grow: 1; padding-right: 10px; }
         .hist-val { font-weight: 500; font-size: 15px; }
-        .hist-del {
-            background: none; border: none; color: #ccc;
-            font-size: 14px; padding: 5px; cursor: pointer;
-        }
+        .hist-date-badge { background: #eee; font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-left: 5px; color: #555;}
+        .hist-del { background: none; border: none; color: #ccc; font-size: 14px; padding: 5px; cursor: pointer; }
         .hist-del:hover { color: var(--danger); }
 
         /* FOOTER ACTIONS */
-        .footer-actions {
-            margin-top: 30px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        .action-btn {
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
+        .footer-actions { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .action-btn { padding: 12px; border-radius: 8px; border: none; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .btn-backup { background: #eef5ff; color: var(--primary); }
         .btn-wa { background: #e8f5e9; color: var(--success); }
 
-        /* PRINT STYLES */
         @media print {
             body { background: white; padding: 0; }
-            header, .footer-actions, .input-card, .edit-btn, .hist-del { display: none !important; }
+            header, .footer-actions, .input-card, .edit-btn, .hist-del, .time-selector { display: none !important; }
             .container { max-width: 100%; }
             .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
-            h1::after { content: " - Verlaufsprotokoll"; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>💊 MediTracker</h1>
-    <div class="tabs" id="tabContainer">
-        </div>
+    <h1>💊 MediTracker Pro</h1>
+    <div class="tabs" id="tabContainer"></div>
 </header>
 
 <div class="container">
 
+    <div class="time-selector">
+        <div onclick="toggleDateInput()" style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+            <i class="fas fa-clock"></i> 
+            <span id="timeLabel">Zeitpunkt: <b>JETZT</b> (Ändern)</span>
+        </div>
+        <input type="datetime-local" id="manualDate" class="date-input">
+        <button onclick="resetDate()" id="resetDateBtn" style="display:none; border:none; background:none; color:red; font-size:12px;">Reset</button>
+    </div>
+
     <div class="card input-card">
         <div class="section-header">
-            <span>Schnellzugriff Medikamente</span>
-            <i class="fas fa-pencil-alt edit-btn" onclick="toggleEditMode()" style="cursor:pointer;"></i>
+            <span>Medikamente (Tagesdosis)</span>
+            <i class="fas fa-pencil-alt edit-btn" onclick="toggleEditMode()" style="cursor:pointer; padding:5px;"></i>
         </div>
+        <p id="editHint" style="font-size:12px; color:#ff9500; display:none; margin-bottom:10px;">
+            <i class="fas fa-info-circle"></i> Name ändern & Max-Dosis festlegen (0 = unbegrenzt)
+        </p>
         <div class="med-grid" id="medButtons">
             </div>
     </div>
@@ -279,18 +266,17 @@
 
     <div class="card">
         <div class="section-header">
-            <span>Verlauf (Aktuelle Person)</span>
+            <span>Verlauf</span>
             <span id="entryCount" style="background:#eee; padding:2px 6px; border-radius:10px; font-size:11px;">0</span>
         </div>
-        <ul id="historyList" class="history-list">
-            </ul>
+        <ul id="historyList" class="history-list"></ul>
     </div>
 
     <div class="footer-actions">
-        <button class="action-btn btn-backup" onclick="downloadBackup()"><i class="fas fa-download"></i> Backup (JSON)</button>
+        <button class="action-btn btn-backup" onclick="downloadBackup()"><i class="fas fa-download"></i> Backup</button>
         <button class="action-btn btn-backup" onclick="restoreBackup()"><i class="fas fa-upload"></i> Restore</button>
-        <button class="action-btn btn-wa" onclick="shareWhatsApp()"><i class="fab fa-whatsapp"></i> Senden</button>
-        <button class="action-btn" style="background:#333; color:white;" onclick="window.print()"><i class="fas fa-file-pdf"></i> PDF / Drucken</button>
+        <button class="action-btn btn-wa" onclick="shareWhatsApp()"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+        <button class="action-btn" style="background:#333; color:white;" onclick="window.print()"><i class="fas fa-file-pdf"></i> PDF</button>
     </div>
     
     <input type="file" id="fileInput" style="display:none" onchange="processFile(this)">
@@ -303,26 +289,96 @@
     let currentUser = users[0];
     let isEditMode = false;
 
-    // Standard Medikamenten-Namen (falls noch nichts gespeichert)
+    // Standard Medikamente mit MAX Dosis (0 = egal)
     const defaultMeds = {
-        'Karsten': ['Ibuprofen 400', 'Paracetamol', 'Nasenspray', 'Hustensaft', 'Antibiotika'],
-        'Hanna':   ['Nurofen Saft', 'Paracetamol Zäpfchen', 'Nasentropfen', 'Hustensaft', 'Vomex'],
-        'Marlene': ['Nurofen Saft', 'Paracetamol Zäpfchen', 'Nasentropfen', 'Hustensaft', 'Vomex'],
-        'Linda':   ['Nurofen Saft', 'Paracetamol Zäpfchen', 'Nasentropfen', 'Hustensaft', 'Vomex']
+        'Karsten': [
+            { name: 'Ibuprofen 400', max: 3 },
+            { name: 'Paracetamol', max: 4 },
+            { name: 'Nasenspray', max: 3 },
+            { name: 'Hustensaft', max: 3 },
+            { name: 'Antibiotika', max: 2 }
+        ],
+        'Hanna': [
+            { name: 'Nurofen Saft', max: 3 }, 
+            { name: 'Paracetamol', max: 4 },
+            { name: 'Nasentropfen', max: 3 },
+            { name: 'Hustensaft', max: 3 },
+            { name: 'Vomex', max: 1 }
+        ],
+        'Marlene': [
+            { name: 'Nurofen Saft', max: 3 }, 
+            { name: 'Paracetamol', max: 4 },
+            { name: 'Nasentropfen', max: 3 },
+            { name: 'Hustensaft', max: 3 },
+            { name: 'Vomex', max: 1 }
+        ],
+        'Linda': [
+            { name: 'Nurofen Saft', max: 3 }, 
+            { name: 'Paracetamol', max: 4 },
+            { name: 'Nasentropfen', max: 3 },
+            { name: 'Hustensaft', max: 3 },
+            { name: 'Vomex', max: 1 }
+        ]
     };
 
-    // Datenstrukturen
     let logs = JSON.parse(localStorage.getItem('medLogs')) || [];
-    let medConfig = JSON.parse(localStorage.getItem('medConfig')) || defaultMeds;
+    let medConfig = JSON.parse(localStorage.getItem('medConfig')) || JSON.parse(JSON.stringify(defaultMeds));
 
-    // --- INITIALISIERUNG ---
+    // MIGRATION: Falls alte Datenstruktur (nur Strings) vorhanden ist
+    function migrateConfig() {
+        let changed = false;
+        users.forEach(u => {
+            if (medConfig[u] && typeof medConfig[u][0] === 'string') {
+                // Konvertiere String-Array zu Objekt-Array
+                medConfig[u] = medConfig[u].map(name => ({ name: name, max: 0 }));
+                changed = true;
+            }
+        });
+        if(changed) localStorage.setItem('medConfig', JSON.stringify(medConfig));
+    }
+
     function init() {
+        migrateConfig();
         renderTabs();
         renderMedButtons();
         renderHistory();
     }
 
-    // --- TABS RENDERN ---
+    // --- MANUELLE EINGABE (Datum) ---
+    function toggleDateInput() {
+        const input = document.getElementById('manualDate');
+        const btn = document.getElementById('resetDateBtn');
+        const label = document.getElementById('timeLabel');
+        
+        if (input.style.display === 'block') return; // Schon offen
+
+        input.style.display = 'block';
+        btn.style.display = 'block';
+        
+        // Aktuelle Zeit setzen für ISO Format (yyyy-MM-ddThh:mm)
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        input.value = now.toISOString().slice(0,16);
+        
+        label.innerHTML = "Zeitpunkt wählen:";
+    }
+
+    function resetDate() {
+        document.getElementById('manualDate').style.display = 'none';
+        document.getElementById('manualDate').value = '';
+        document.getElementById('resetDateBtn').style.display = 'none';
+        document.getElementById('timeLabel').innerHTML = "Zeitpunkt: <b>JETZT</b> (Ändern)";
+    }
+
+    function getEntryDate() {
+        const manualVal = document.getElementById('manualDate').value;
+        if (manualVal) {
+            return new Date(manualVal).toISOString();
+        }
+        return new Date().toISOString();
+    }
+
+    // --- TABS ---
     function renderTabs() {
         const container = document.getElementById('tabContainer');
         container.innerHTML = '';
@@ -337,7 +393,8 @@
 
     function switchUser(user) {
         currentUser = user;
-        isEditMode = false; // Edit Mode beim Wechsel ausmachen
+        isEditMode = false;
+        document.getElementById('editHint').style.display = 'none';
         renderTabs();
         renderMedButtons();
         renderHistory();
@@ -347,28 +404,71 @@
         document.getElementById('vomitInput').checked = false;
     }
 
-    // --- BUTTONS RENDERN & EDITIEREN ---
+    // --- BUTTONS & PROGRESS ---
+    function getDailyCount(medName) {
+        // Zählt, wie oft das Medikament HEUTE schon gegeben wurde
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        // Prüfen ob manuelles Datum gesetzt ist, dann nehmen wir "HEUTE" von diesem Datum
+        const manualVal = document.getElementById('manualDate').value;
+        let checkDateStr = todayStr;
+        if(manualVal) {
+            checkDateStr = manualVal.split('T')[0];
+        }
+
+        return logs.filter(l => 
+            l.user === currentUser && 
+            l.type === 'Medikament' && 
+            l.value === medName && 
+            l.date.startsWith(checkDateStr)
+        ).length;
+    }
+
     function renderMedButtons() {
         const container = document.getElementById('medButtons');
         container.innerHTML = '';
         
-        const meds = medConfig[currentUser] || defaultMeds[currentUser]; // Fallback
+        const meds = medConfig[currentUser] || [];
 
-        meds.forEach((med, index) => {
+        meds.forEach((medObj, index) => {
             if (isEditMode) {
-                // Editier-Modus: Input Felder
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'edit-input';
-                input.value = med;
-                input.onchange = (e) => updateMedName(index, e.target.value);
-                container.appendChild(input);
+                // EDIT MODE
+                const div = document.createElement('div');
+                div.className = 'edit-row';
+                div.innerHTML = `
+                    <input type="text" class="edit-input" value="${medObj.name}" onchange="updateMedConfig(${index}, 'name', this.value)">
+                    <input type="number" class="edit-max" value="${medObj.max}" placeholder="Max" onchange="updateMedConfig(${index}, 'max', this.value)">
+                `;
+                container.appendChild(div);
             } else {
-                // Normaler Modus: Buttons
-                const btn = document.createElement('button');
+                // VIEW MODE
+                const count = getDailyCount(medObj.name);
+                const max = medObj.max;
+                let pct = 0;
+                let alertClass = '';
+                let bgClass = 'progress-bg';
+                
+                if (max > 0) {
+                    pct = (count / max) * 100;
+                    if(pct > 100) pct = 100;
+                    if(count >= max) {
+                        alertClass = 'alert';
+                        bgClass += ' limit-reached';
+                    }
+                }
+
+                const displayCount = max > 0 ? `${count} / ${max}` : `${count}`;
+
+                const btn = document.createElement('div');
                 btn.className = 'med-btn';
-                btn.innerHTML = `<span>${med}</span> <i class="fas fa-plus-circle"></i>`;
-                btn.onclick = () => addLog('Medikament', med);
+                btn.onclick = () => addLog('Medikament', medObj.name);
+                btn.innerHTML = `
+                    <div class="${bgClass}" style="width: ${pct}%"></div>
+                    <div class="med-content">
+                        <span class="med-name">${medObj.name}</span> 
+                        <span class="med-count ${alertClass}">${displayCount} heute</span>
+                    </div>
+                `;
                 container.appendChild(btn);
             }
         });
@@ -376,30 +476,42 @@
 
     function toggleEditMode() {
         isEditMode = !isEditMode;
+        document.getElementById('editHint').style.display = isEditMode ? 'block' : 'none';
         renderMedButtons();
     }
 
-    function updateMedName(index, newName) {
-        if (!medConfig[currentUser]) medConfig[currentUser] = [...defaultMeds[currentUser]];
-        medConfig[currentUser][index] = newName;
+    function updateMedConfig(index, key, value) {
+        if (!medConfig[currentUser]) return;
+        if (key === 'max') value = parseInt(value) || 0;
+        
+        medConfig[currentUser][index][key] = value;
         localStorage.setItem('medConfig', JSON.stringify(medConfig));
     }
 
     // --- LOGGING ---
     function addLog(type, value) {
+        const customDate = getEntryDate();
+        
         const entry = {
             id: Date.now(),
-            date: new Date().toISOString(),
+            date: customDate,
             user: currentUser,
             type: type,
             value: value
         };
-        logs.unshift(entry); // Neuester oben
+        logs.unshift(entry); 
         saveLogs();
         renderHistory();
+        renderMedButtons(); // Update Balken
         
-        // Kleines Feedback vibrieren (nur mobil)
-        if(navigator.vibrate) navigator.vibrate(50);
+        // Wenn es ein Nachtrag war, Hinweis geben
+        const manualVal = document.getElementById('manualDate').value;
+        if(manualVal) {
+            alert(`Nachtrag gespeichert für: ${new Date(customDate).toLocaleString()}`);
+            // Wir lassen das Datum drin stehen, falls man noch mehr nachtragen will
+        } else if(navigator.vibrate) {
+            navigator.vibrate(50);
+        }
     }
 
     function logVitals() {
@@ -409,23 +521,13 @@
         
         let entriesMade = false;
 
-        if (temp) {
-            addLog('Temperatur', `${temp} °C`);
-            entriesMade = true;
-        }
-        if (diarrhea) {
-            addLog('Symptom', 'Durchfall');
-            entriesMade = true;
-        }
-        if (vomit) {
-            addLog('Symptom', 'Übergeben');
-            entriesMade = true;
-        }
+        if (temp) { addLog('Temperatur', `${temp} °C`); entriesMade = true; }
+        if (diarrhea) { addLog('Symptom', 'Durchfall'); entriesMade = true; }
+        if (vomit) { addLog('Symptom', 'Übergeben'); entriesMade = true; }
 
         if (!entriesMade) {
             alert("Bitte gib eine Temperatur ein oder wähle ein Symptom aus.");
         } else {
-            // Reset
             document.getElementById('tempInput').value = '';
             document.getElementById('diarrheaInput').checked = false;
             document.getElementById('vomitInput').checked = false;
@@ -437,29 +539,33 @@
             logs = logs.filter(l => l.id !== id);
             saveLogs();
             renderHistory();
+            renderMedButtons(); // Balken updaten
         }
     }
 
-    function saveLogs() {
-        localStorage.setItem('medLogs', JSON.stringify(logs));
-    }
+    function saveLogs() { localStorage.setItem('medLogs', JSON.stringify(logs)); }
 
-    // --- HISTORY ANZEIGE ---
+    // --- HISTORY ---
     function renderHistory() {
         const list = document.getElementById('historyList');
         list.innerHTML = '';
         
-        // Filter: Nur aktueller User
+        // Sortieren nach Datum (neu nach alt), falls manuell eingefügt wurde
+        logs.sort((a,b) => new Date(b.date) - new Date(a.date));
+
         const userLogs = logs.filter(l => l.user === currentUser);
         document.getElementById('entryCount').innerText = userLogs.length;
 
         if (userLogs.length === 0) {
-            list.innerHTML = '<li style="text-align:center; padding:20px; color:#999;">Keine Einträge vorhanden.</li>';
+            list.innerHTML = '<li style="text-align:center; padding:20px; color:#999;">Keine Einträge.</li>';
             return;
         }
 
         userLogs.forEach(log => {
             const dateObj = new Date(log.date);
+            const today = new Date().toDateString();
+            const isToday = dateObj.toDateString() === today;
+
             const dateStr = dateObj.toLocaleDateString('de-DE');
             const timeStr = dateObj.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
             
@@ -467,11 +573,14 @@
             if(log.type === 'Temperatur') icon = '🌡️';
             if(log.type === 'Symptom') icon = '⚠️';
 
+            // Markierung wenn nicht HEUTE
+            const dateBadge = !isToday ? `<span class="hist-date-badge">${dateStr}</span>` : '';
+
             const li = document.createElement('li');
             li.className = 'history-item';
             li.innerHTML = `
                 <div class="hist-content">
-                    <span class="hist-time">${dateStr}, ${timeStr} Uhr</span>
+                    <span class="hist-time">${timeStr} Uhr ${dateBadge}</span>
                     <span class="hist-val">${icon} ${log.value}</span>
                 </div>
                 <button class="hist-del" onclick="deleteLog(${log.id})"><i class="fas fa-trash"></i></button>
@@ -480,15 +589,16 @@
         });
     }
 
-    // --- EXPORT & BACKUP FUNKTIONEN ---
-
+    // --- EXPORT & BACKUP ---
     function shareWhatsApp() {
-        // Generiert Text für WhatsApp
         const userLogs = logs.filter(l => l.user === currentUser);
         if(userLogs.length === 0) { alert("Nichts zu senden."); return; }
 
         let text = `*Protokoll für ${currentUser}:*\n`;
-        userLogs.forEach(l => {
+        // Sortiere für Text-Export chronologisch (alt nach neu) oder wie gewünscht
+        const exportLogs = [...userLogs].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+        exportLogs.forEach(l => {
             const d = new Date(l.date);
             const t = d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
             const dat = d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
@@ -502,17 +612,15 @@
     function downloadBackup() {
         const data = { logs: logs, config: medConfig };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", "meditracker_backup_" + new Date().toISOString().slice(0,10) + ".json");
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
+        const dlNode = document.createElement('a');
+        dlNode.setAttribute("href", dataStr);
+        dlNode.setAttribute("download", `MediTracker_Backup_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(dlNode);
+        dlNode.click();
+        dlNode.remove();
     }
 
-    function restoreBackup() {
-        document.getElementById('fileInput').click();
-    }
+    function restoreBackup() { document.getElementById('fileInput').click(); }
 
     function processFile(input) {
         const file = input.files[0];
@@ -528,20 +636,14 @@
                     localStorage.setItem('medConfig', JSON.stringify(medConfig));
                     init();
                     alert("Backup erfolgreich wiederhergestellt!");
-                } else {
-                    alert("Ungültiges Dateiformat.");
-                }
-            } catch(err) {
-                alert("Fehler beim Lesen der Datei.");
-            }
+                } else { alert("Ungültiges Dateiformat."); }
+            } catch(err) { alert("Fehler beim Lesen der Datei."); }
         };
         reader.readAsText(file);
     }
 
-    // Starten
     init();
 
 </script>
-
 </body>
 </html>
