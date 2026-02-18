@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MediTracker 🚑</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #007aff;
+            --bg: #f2f2f7;
+            --card: #ffffff;
+            --text: #1c1c1e;
+            --danger: #ff3b30;
+            --success: #34c759;
+            --gray: #8e8e93;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 80px;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* --- HEADER & TABS --- */
+        header {
+            background: var(--card);
+            padding: 15px 10px 0 10px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+        }
+
+        h1 { margin: 0 0 15px 0; text-align: center; font-size: 22px; }
+
+        .tabs {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 5px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            color: var(--gray);
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 14px;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* --- MAIN CONTENT --- */
+        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #555;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        /* MED BUTTONS */
+        .med-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .med-btn {
+            background: #eef5ff;
+            color: var(--primary);
+            border: 1px solid #dbeafe;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .med-btn:active { background: #dbeafe; transform: scale(0.98); }
+        .med-btn i { color: var(--primary); opacity: 0.7; }
+
+        .edit-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        /* VITALS INPUTS */
+        .input-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .input-row:last-child { border-bottom: none; }
+
+        .num-input {
+            width: 80px;
+            padding: 8px;
+            font-size: 18px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* CHECKBOX TOGGLE */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px; width: 20px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--danger); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .save-vitals-btn {
+            width: 100%;
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        /* HISTORY */
+        .history-list { list-style: none; padding: 0; margin: 0; }
+        .history-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .hist-time { font-size: 12px; color: var(--gray); display: block; margin-bottom: 2px;}
+        .hist-content { flex-grow: 1; padding-right: 10px; }
+        .hist-val { font-weight: 500; font-size: 15px; }
+        .hist-del {
+            background: none; border: none; color: #ccc;
+            font-size: 14px; padding: 5px; cursor: pointer;
+        }
+        .hist-del:hover { color: var(--danger); }
+
+        /* FOOTER ACTIONS */
+        .footer-actions {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .action-btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .btn-backup { background: #eef5ff; color: var(--primary); }
+        .btn-wa { background: #e8f5e9; color: var(--success); }
+
+        /* PRINT STYLES */
+        @media print {
+            body { background: white; padding: 0; }
+            header, .footer-actions, .input-card, .edit-btn, .hist-del { display: none !important; }
+            .container { max-width: 100%; }
+            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+            h1::after { content: " - Verlaufsprotokoll"; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>💊 MediTracker</h1>
+    <div class="tabs" id="tabContainer">
+        </div>
+</header>
+
+<div class="container">
+
+    <div class="card input-card">
+        <div class="section-header">
+            <span>Schnellzugriff Medikamente</span>
+            <i class="fas fa-pencil-alt edit-btn" onclick="toggleEditMode()" style="cursor:pointer;"></i>
+        </div>
+        <div class="med-grid" id="medButtons">
+            </div>
+    </div>
+
+    <div class="card input-card">
+        <div class="section-header">Vitalwerte & Symptome</div>
+        
+        <div class="input-row">
+            <span><i class="fas fa-thermometer-half" style="color:var(--danger); width:20px;"></i> Temperatur</span>
+            <input type="number" id="tempInput" class="num-input" placeholder="36.5" step="0.1">
+        </div>
+
+        <div class="input-row">
+            <span><i class="fas fa-toilet" style="color:brown; width:20px;"></i> Durchfall</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="diarrheaInput">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="input-row">
+            <span><i class="fas fa-head-side-cough" style="color:orange; width:20px;"></i> Übergeben</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="vomitInput">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <button class="save-vitals-btn" onclick="logVitals()">Eintrag speichern</button>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <span>Verlauf (Aktuelle Person)</span>
+            <span id="entryCount" style="background:#eee; padding:2px 6px; border-radius:10px; font-size:11px;">0</span>
+        </div>
+        <ul id="historyList" class="history-list">
+            </ul>
+    </div>
+
+    <div class="footer-actions">
+        <button class="action-btn btn-backup" onclick="downloadBackup()"><i class="fas fa-download"></i> Backup (JSON)</button>
+        <button class="action-btn btn-backup" onclick="restoreBackup()"><i class="fas fa-upload"></i> Restore</button>
+        <button class="action-btn btn-wa" onclick="shareWhatsApp()"><i class="fab fa-whatsapp"></i> Senden</button>
+        <button class="action-btn" style="background:#333; color:white;" onclick="window.print()"><i class="fas fa-file-pdf"></i> PDF / Drucken</button>
+    </div>
+    
+    <input type="file" id="fileInput" style="display:none" onchange="processFile(this)">
+
+</div>
+
+<script>
+    // --- KONFIGURATION ---
+    const users = ['Karsten', 'Hanna', 'Marlene', 'Linda'];
+    let currentUser = users[0];
+    let isEditMode = false;
+
+    // Standard Medikamenten-Namen (falls noch nichts gespeichert)
+    const defaultMeds = {
+        'Karsten': ['Ibuprofen 400', 'Paracetamol', 'Nasenspray', 'Hustensaft', 'Antibiotika'],
+        'Hanna':   ['Nurofen Saft', 'Paracetamol Zäpfchen', 'Nasentropfen', 'Hustensaft', 'Vomex'],
+        'Marlene': ['Nurofen Saft', 'Paracetamol Zäpfchen', 'Nasentropfen', 'Hustensaft', 'Vomex'],
+        'Linda':   ['Nurofen Saft', 'Paracetamol Zäpfchen', 'Nasentropfen', 'Hustensaft', 'Vomex']
+    };
+
+    // Datenstrukturen
+    let logs = JSON.parse(localStorage.getItem('medLogs')) || [];
+    let medConfig = JSON.parse(localStorage.getItem('medConfig')) || defaultMeds;
+
+    // --- INITIALISIERUNG ---
+    function init() {
+        renderTabs();
+        renderMedButtons();
+        renderHistory();
+    }
+
+    // --- TABS RENDERN ---
+    function renderTabs() {
+        const container = document.getElementById('tabContainer');
+        container.innerHTML = '';
+        users.forEach(user => {
+            const btn = document.createElement('button');
+            btn.className = `tab-btn ${user === currentUser ? 'active' : ''}`;
+            btn.innerText = user;
+            btn.onclick = () => switchUser(user);
+            container.appendChild(btn);
+        });
+    }
+
+    function switchUser(user) {
+        currentUser = user;
+        isEditMode = false; // Edit Mode beim Wechsel ausmachen
+        renderTabs();
+        renderMedButtons();
+        renderHistory();
+        // Reset Inputs
+        document.getElementById('tempInput').value = '';
+        document.getElementById('diarrheaInput').checked = false;
+        document.getElementById('vomitInput').checked = false;
+    }
+
+    // --- BUTTONS RENDERN & EDITIEREN ---
+    function renderMedButtons() {
+        const container = document.getElementById('medButtons');
+        container.innerHTML = '';
+        
+        const meds = medConfig[currentUser] || defaultMeds[currentUser]; // Fallback
+
+        meds.forEach((med, index) => {
+            if (isEditMode) {
+                // Editier-Modus: Input Felder
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'edit-input';
+                input.value = med;
+                input.onchange = (e) => updateMedName(index, e.target.value);
+                container.appendChild(input);
+            } else {
+                // Normaler Modus: Buttons
+                const btn = document.createElement('button');
+                btn.className = 'med-btn';
+                btn.innerHTML = `<span>${med}</span> <i class="fas fa-plus-circle"></i>`;
+                btn.onclick = () => addLog('Medikament', med);
+                container.appendChild(btn);
+            }
+        });
+    }
+
+    function toggleEditMode() {
+        isEditMode = !isEditMode;
+        renderMedButtons();
+    }
+
+    function updateMedName(index, newName) {
+        if (!medConfig[currentUser]) medConfig[currentUser] = [...defaultMeds[currentUser]];
+        medConfig[currentUser][index] = newName;
+        localStorage.setItem('medConfig', JSON.stringify(medConfig));
+    }
+
+    // --- LOGGING ---
+    function addLog(type, value) {
+        const entry = {
+            id: Date.now(),
+            date: new Date().toISOString(),
+            user: currentUser,
+            type: type,
+            value: value
+        };
+        logs.unshift(entry); // Neuester oben
+        saveLogs();
+        renderHistory();
+        
+        // Kleines Feedback vibrieren (nur mobil)
+        if(navigator.vibrate) navigator.vibrate(50);
+    }
+
+    function logVitals() {
+        const temp = document.getElementById('tempInput').value;
+        const diarrhea = document.getElementById('diarrheaInput').checked;
+        const vomit = document.getElementById('vomitInput').checked;
+        
+        let entriesMade = false;
+
+        if (temp) {
+            addLog('Temperatur', `${temp} °C`);
+            entriesMade = true;
+        }
+        if (diarrhea) {
+            addLog('Symptom', 'Durchfall');
+            entriesMade = true;
+        }
+        if (vomit) {
+            addLog('Symptom', 'Übergeben');
+            entriesMade = true;
+        }
+
+        if (!entriesMade) {
+            alert("Bitte gib eine Temperatur ein oder wähle ein Symptom aus.");
+        } else {
+            // Reset
+            document.getElementById('tempInput').value = '';
+            document.getElementById('diarrheaInput').checked = false;
+            document.getElementById('vomitInput').checked = false;
+        }
+    }
+
+    function deleteLog(id) {
+        if(confirm("Eintrag wirklich löschen?")) {
+            logs = logs.filter(l => l.id !== id);
+            saveLogs();
+            renderHistory();
+        }
+    }
+
+    function saveLogs() {
+        localStorage.setItem('medLogs', JSON.stringify(logs));
+    }
+
+    // --- HISTORY ANZEIGE ---
+    function renderHistory() {
+        const list = document.getElementById('historyList');
+        list.innerHTML = '';
+        
+        // Filter: Nur aktueller User
+        const userLogs = logs.filter(l => l.user === currentUser);
+        document.getElementById('entryCount').innerText = userLogs.length;
+
+        if (userLogs.length === 0) {
+            list.innerHTML = '<li style="text-align:center; padding:20px; color:#999;">Keine Einträge vorhanden.</li>';
+            return;
+        }
+
+        userLogs.forEach(log => {
+            const dateObj = new Date(log.date);
+            const dateStr = dateObj.toLocaleDateString('de-DE');
+            const timeStr = dateObj.toLocaleTimeString('de-DE', {hour: '2-digit', minute:'2-digit'});
+            
+            let icon = '💊';
+            if(log.type === 'Temperatur') icon = '🌡️';
+            if(log.type === 'Symptom') icon = '⚠️';
+
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerHTML = `
+                <div class="hist-content">
+                    <span class="hist-time">${dateStr}, ${timeStr} Uhr</span>
+                    <span class="hist-val">${icon} ${log.value}</span>
+                </div>
+                <button class="hist-del" onclick="deleteLog(${log.id})"><i class="fas fa-trash"></i></button>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    // --- EXPORT & BACKUP FUNKTIONEN ---
+
+    function shareWhatsApp() {
+        // Generiert Text für WhatsApp
+        const userLogs = logs.filter(l => l.user === currentUser);
+        if(userLogs.length === 0) { alert("Nichts zu senden."); return; }
+
+        let text = `*Protokoll für ${currentUser}:*\n`;
+        userLogs.forEach(l => {
+            const d = new Date(l.date);
+            const t = d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+            const dat = d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'});
+            text += `[${dat} ${t}] ${l.value}\n`;
+        });
+
+        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    }
+
+    function downloadBackup() {
+        const data = { logs: logs, config: medConfig };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "meditracker_backup_" + new Date().toISOString().slice(0,10) + ".json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    function restoreBackup() {
+        document.getElementById('fileInput').click();
+    }
+
+    function processFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.logs && data.config) {
+                    logs = data.logs;
+                    medConfig = data.config;
+                    saveLogs();
+                    localStorage.setItem('medConfig', JSON.stringify(medConfig));
+                    init();
+                    alert("Backup erfolgreich wiederhergestellt!");
+                } else {
+                    alert("Ungültiges Dateiformat.");
+                }
+            } catch(err) {
+                alert("Fehler beim Lesen der Datei.");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // Starten
+    init();
+
+</script>
+
+</body>
+</html>
